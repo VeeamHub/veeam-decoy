@@ -52,7 +52,7 @@ clone_repo() {
         echo "Removing existing /tmp/decoys directory..."
         rm -rf /tmp/decoys
     fi
-    git clone https://github.com/mescobarcl/hnp.git /tmp/decoys
+    git clone https://github.com/VeeamHub/veeam-decoy.git /tmp/decoys
     rm -f /tmp/decoys/install.sh
     rm -rf /tmp/decoys/.git
     echo "Repository cloned successfully and install.sh removed"
