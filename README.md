@@ -57,7 +57,7 @@ The minimum requirements needed to use the Appliance are as follows:
 
 Install Rocky Linux 9.4, choose "Minimal Installation" under the software selection section, make sure that no "Security Profile" is selected, after installation, connect via SSH with user "root" and execute:
 
-`curl -s https://raw.githubusercontent.com/mescobarcl/hnp/main/install.sh | bash`
+`curl -s https://raw.githubusercontent.com/VeeamHub/veeam-decoy/master/install.sh | bash`
 
 Then, access the TUI via SSH (port 41325) or Web Console and edit the "Decoy Config File" to change the name(s) of the interfaces for the Decoy services. Save and restart the services for proper operation.
 
