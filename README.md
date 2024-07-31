@@ -1,7 +1,7 @@
 # Veeam Decoys
 **Author**: Marco Escobar marco.escobar@veeam.com
 
-This is an open-source project where multiple decoys have been created for various Veeam services and remote administration services to detect Discovery (TA0007) and Lateral Movements (TA0008) of threat actors within the organization's internal networks.
+This is an open-source project where multiple decoys have been created for various Veeam services and remote administration services to detect Discovery (TA0007) and Lateral Movements (TA0008) of threat actors within the organization's **internal** networks.
 
 - Veeam Backup Server
 - Veeam Hardened Repository
