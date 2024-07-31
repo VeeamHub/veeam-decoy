@@ -1,0 +1,12 @@
+[Unit]
+Description=Veeam Enterprise Manager Honeypot
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /opt/VBEM/vbem_server.py
+WorkingDirectory=/opt/VBR
+Restart=on-failure
+User=root
+
+[Install]
+WantedBy=multi-user.target

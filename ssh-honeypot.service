@@ -1,0 +1,12 @@
+[Unit]
+Description=SSH Honeypot
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /opt/SSH/ssh_honeypot.py
+WorkingDirectory=/opt/VBR
+Restart=on-failure
+User=root
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,99 @@
+#Decoy Config File
+
+#If more than one interface is used in the config "interfaces" they must be separated by comma without space, e.g.: ens192,ens193
+
+# SSH Decoy configuration
+# interfaces: List of network interfaces on which the SSH Decoy will run, separated by commas.
+# banner: The banner that will be displayed when connecting to the SSH Decoy. By default shows "SSH-2.0-OpenSSH_9.7" affected by CVE-2024-6387
+# random_rsa: If set to 'yes', it will generate random RSA keys for each connection.
+
+[SSH]
+interfaces = ens192
+banner = SSH-2.0-OpenSSH_9.7
+random_rsa = no
+
+# Remote Desktop Protocol Decoy configuration
+# interfaces: List of network interfaces on which the RDP Decoy will run.
+# use_ssl: If set to 'yes', the RDP Decoy will use SSL/TLS (Experimental)
+# OS: Simulated operating system
+# OS_Build: Build number of the simulated operating system
+# Target_Name: Name of the RDP target
+# NetBIOS_Domain_Name: Simulated NetBIOS domain name
+# NetBIOS_Computer_Name: Simulated NetBIOS computer name
+# DNS_Domain_Name: Simulated DNS domain name
+# FQDN: Simulated FQDN Full Domain Name
+
+[RDP]
+interfaces = ens192
+use_ssl= no
+OS = Windows Server 2022
+OS_Build = 10.0.20348
+Target_Name = VEEAM
+NetBIOS_Domain_Name = VEEAM
+NetBIOS_Computer_Name = VEEAM
+DNS_Domain_Name = veeam
+FQDN = veeam.24xsiempre.com
+
+# Veeam Backup & Replication Decoy configuration
+# interfaces: List of network interfaces on which the VBR Decoy will be executed
+# database_type: Type of simulated database (sqlserver or postgresql)
+
+[VBR]
+interfaces = ens192
+database_type = sqlserver
+
+# Veeam Windows Repository Decoy configuration
+# interfaces: List of network interfaces on which the VWR Decoy will be run
+# server_name: Name of the simulated server
+
+[VWR]
+interfaces = ens224
+server_name = VEEAM-SERVER
+
+# Veeam Hardened Repository Decoy configuration
+# interfaces: List of network interfaces on which the VHR Decoy will run
+# server_name: Name of the simulated server
+
+[VHR]
+interfaces = ens192
+server_name = VHR-Veeam
+
+# Veeam Backup Enterprise Manager Decoy configuration
+# interfaces: List of network interfaces on which the VBEM Decoy will be executed.
+# server_name: Simulated server name (with this name the decoy creates an ssl certificate) 
+# server_header: HTTP/HTTPS server header of the simulated server
+
+[VBEM]
+interfaces = ens192
+server_name= vbem.24xsiempre.com
+server_header= Microsoft-IIS/10.0
+
+# NetBIOS Decoy configuration
+# interfaces: List of network interfaces on which the NetBIOS Decoy will run
+# server_name: Name of the simulated NetBIOS server
+# workgroup: Workgroup of the simulated NetBIOS server
+
+[NETBIOS]
+interfaces = ens192
+server_name = VEEAM-SERVER
+workgroup = 24XSIEMPRE
+
+# Configuration for sending summaries by e-mail
+# enabled: 'yes' to enable sending mails, 'no' to disable it
+# smtp_server: SMTP server address for sending mails
+# smtp_port: SMTP server port
+# smtp_username: Username for SMTP authentication
+# smtp_password: Password for SMTP authentication
+# from_email: Sender's email address
+# from_name: Name that will appear as sender
+# to_email: Recipient's email address
+
+[Email]
+enabled = no
+smtp_server = smtp.server.com
+smtp_port = 587
+smtp_username = user
+smtp_password = pass
+from_email = alert@24xsiempre.com
+from_name = Decoy Alert
+to_email = marco@24xsiempre.com

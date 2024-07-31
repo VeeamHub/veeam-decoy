@@ -1,0 +1,12 @@
+[Unit]
+Description=Veeam Hardened Repository Honeypot
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /opt/VHR/vhr_honeypot.py
+WorkingDirectory=/opt/VBR
+Restart=on-failure
+User=root
+
+[Install]
+WantedBy=multi-user.target

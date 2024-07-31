@@ -1,0 +1,12 @@
+[Unit]
+Description=RDP Honeypot
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /opt/RDP/rdp_honeypot.py
+WorkingDirectory=/opt/RDP
+Restart=on-failure
+User=root
+
+[Install]
+WantedBy=multi-user.target
