@@ -64,6 +64,7 @@ Then, access the TUI via SSH (port 41325) or Web Console and edit the "Decoy Con
 # Operating System Updates
 
 Appliance: Rocky Linux operating system updates must be performed according to the company's security policies or the appliance user. **It is not this project's responsibility to maintain operating system updates**.
+
 Manual: Installation must comply with company policies.
 
 # Questions
