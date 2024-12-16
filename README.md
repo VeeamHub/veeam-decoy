@@ -67,7 +67,7 @@ Appliance: Rocky Linux operating system updates must be performed according to t
 Manual: Installation must comply with company policies.
 
 # Questions
-If you have any questions or if something is unclear, please don't hesitate to [create an issue](https://github.com/mescobarcl/hnp/issues) and let us know!
+If you have any questions or if something is unclear, please don't hesitate to [create an issue](https://github.com/VeeamHub/veeam-decoy/issues) and let us know!
 
 # License
-- [MIT License](https://github.com/mescobarcl/hnp/blob/main/LICENSE)
+- [MIT License](https://github.com/VeeamHub/veeam-decoy/tree/master?tab=MIT-1-ov-file)
