@@ -12,7 +12,6 @@ check_os() {
         os_version=$(cat /etc/redhat-release)
         if [[ $os_version =~ "Rocky Linux release ([0-9]+\.[0-9]+)" ]]; then
             version="${BASH_REMATCH[1]}"
-            # Comparar la versión usando bc para manejar números decimales
             if (( $(echo "$version >= 9.3" | bc -l) )); then
                 echo "Compatible Rocky Linux version detected: $version"
             else
