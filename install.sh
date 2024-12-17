@@ -10,10 +10,11 @@ check_root() {
 check_os() {
     if [[ -f /etc/redhat-release ]]; then
         os_version=$(cat /etc/redhat-release)
-        if [[ $os_version =~ "Rocky Linux release ([0-9]+\.[0-9]+)" ]]; then
+        if [[ $os_version =~ Rocky[[:space:]]Linux[[:space:]]release[[:space:]]([0-9]+\.[0-9]+) ]]; then
             version="${BASH_REMATCH[1]}"
             if (( $(echo "$version >= 9.3" | bc -l) )); then
                 echo "Compatible Rocky Linux version detected: $version"
+                return 0  # Permite que el script continúe
             else
                 echo "This script requires Rocky Linux 9.3 or higher"
                 echo "Current system: $os_version"
