@@ -10,19 +10,21 @@ check_root() {
 check_os() {
     if [[ -f /etc/redhat-release ]]; then
         os_version=$(cat /etc/redhat-release)
-        if [[ $os_version =~ Rocky[[:space:]]Linux[[:space:]]release[[:space:]]([0-9]+\.[0-9]+) ]]; then
-            version="${BASH_REMATCH[1]}"
-            if (( $(echo "$version >= 9.3" | bc -l) )); then
+        if [[ $os_version =~ [0-9]+\.[0-9]+ ]]; then
+            version="${BASH_REMATCH[0]}"
+            major_version=${version%.*}
+            minor_version=${version#*.}
+            
+            if [[ $major_version -eq 9 && $minor_version -ge 3 ]] || [[ $major_version -gt 9 ]]; then
                 echo "Compatible Rocky Linux version detected: $version"
-                return 0  # Permite que el script continúe
+                return 0
             else
                 echo "This script requires Rocky Linux 9.3 or higher"
                 echo "Current system: $os_version"
                 exit 1
             fi
         else
-            echo "This script is designed for Rocky Linux 9.3 or higher"
-            echo "Current system: $os_version"
+            echo "Failed to extract version number"
             exit 1
         fi
     else
@@ -62,7 +64,7 @@ clone_repo() {
         echo "Removing existing /tmp/decoys directory..."
         rm -rf /tmp/decoys
     fi
-    git clone https://github.com/mescobarcl/hnp.git /tmp/decoys
+    git clone https://github.com/VeeamHub/veeam-decoy.git /tmp/decoys
     rm -f /tmp/decoys/install.sh
     rm -rf /tmp/decoys/.git
     echo "Repository cloned successfully and install.sh removed"
