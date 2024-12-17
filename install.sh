@@ -10,8 +10,18 @@ check_root() {
 check_os() {
     if [[ -f /etc/redhat-release ]]; then
         os_version=$(cat /etc/redhat-release)
-        if [[ $os_version != *"Rocky Linux release 9.4"* ]]; then
-            echo "This script is designed for Rocky Linux 9.4"
+        if [[ $os_version =~ "Rocky Linux release ([0-9]+\.[0-9]+)" ]]; then
+            version="${BASH_REMATCH[1]}"
+            # Comparar la versión usando bc para manejar números decimales
+            if (( $(echo "$version >= 9.3" | bc -l) )); then
+                echo "Compatible Rocky Linux version detected: $version"
+            else
+                echo "This script requires Rocky Linux 9.3 or higher"
+                echo "Current system: $os_version"
+                exit 1
+            fi
+        else
+            echo "This script is designed for Rocky Linux 9.3 or higher"
             echo "Current system: $os_version"
             exit 1
         fi
@@ -43,7 +53,7 @@ check_disable_selinux_firewall() {
 install_basic_dependencies() {
     echo "Installing basic dependencies..."
     dnf update -y
-    dnf install -y git python3 python3-pip nano wget libpcap
+    dnf install -y git python3 python3-pip nano wget libpcap bc
 }
 
 clone_repo() {
@@ -52,7 +62,7 @@ clone_repo() {
         echo "Removing existing /tmp/decoys directory..."
         rm -rf /tmp/decoys
     fi
-    git clone https://github.com/VeeamHub/veeam-decoy.git /tmp/decoys
+    git clone https://github.com/mescobarcl/hnp.git /tmp/decoys
     rm -f /tmp/decoys/install.sh
     rm -rf /tmp/decoys/.git
     echo "Repository cloned successfully and install.sh removed"
