@@ -443,18 +443,18 @@ class SystemManagementTUI:
             self.update_popup(popup, "Preparing test email...")
             
             msg = MIMEMultipart()
-            from_name = email_config.get('from_name', 'HNP System')
+            from_name = email_config.get('from_name', 'Decoy System')
             formatted_from = formataddr((from_name, email_config['from_email']))
             msg['From'] = formatted_from
             msg['To'] = email_config['to_email']
-            msg['Subject'] = f"Test Email from HNP System - {socket.gethostname()}"
+            msg['Subject'] = f"Test Email from Decoy System - {socket.gethostname()}"
             
             logger.info(f"Email headers prepared:")
             logger.info(f"- From: {formatted_from}")
             logger.info(f"- To: {email_config['to_email']}")
             logger.info(f"- Subject: {msg['Subject']}")
             
-            body = "This is a test email from your HNP (Honeypot) System.\n\n"
+            body = "This is a test email from your Decoy (Honeypot) System.\n\n"
             body += f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
             body += f"Host: {socket.gethostname()}\n"
             body += "\nIf you received this email, your email configuration is working correctly."
