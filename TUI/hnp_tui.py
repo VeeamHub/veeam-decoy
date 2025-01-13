@@ -13,6 +13,12 @@ import time
 import psutil
 import select
 import fcntl
+import configparser
+import socket
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.utils import formataddr
+import smtplib
 
 
 class RFC5424Formatter(logging.Formatter):
@@ -108,7 +114,6 @@ def get_used_ports_and_interfaces():
                             used_interfaces.add(interface)
                             break
 
-    
     for conn in psutil.net_connections(kind='inet'):
         if conn.status == 'LISTEN':
             used_ports.add(conn.laddr.port)
@@ -200,15 +205,12 @@ class SystemManagementTUI:
         h, w = self.stdscr.getmaxyx()
         self.options = []
 
-        
         self.draw_box(0, 0, h-1, w)
 
-        
         header = f"Decoy System Management | {os.uname().nodename} | {os.uname().sysname} | {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         self.safe_addstr(1, 2, header.center(w-4), curses.A_BOLD)
         self.safe_addstr(2, 1, '-' * (w-2))
 
-        
         services_box_height = len(self.services) + 7
         self.draw_box(3, 1, services_box_height, w//2-1)
         self.safe_addstr(3, 2, " Decoy Services ", curses.A_BOLD)
@@ -226,13 +228,12 @@ class SystemManagementTUI:
             self.options.append(boot_option)
             self.safe_addstr(*boot_option[:3])
 
-        
         self.draw_box(3, w//2, services_box_height, w//2-1)
         self.safe_addstr(3, w//2+1, " Network Interfaces ", curses.A_BOLD)
         option = (5, w//2+2, "[Config Network]", "config_network")
         self.options.append(option)
         self.safe_addstr(*option[:3])
-        self.safe_addstr(6, w//2+2, "")  
+        self.safe_addstr(6, w//2+2, "")
         interfaces, routes = get_network_info()
         for idx, info in enumerate(interfaces[:services_box_height-11]):
             cleaned_info = self.clean_interface_info(info)
@@ -243,7 +244,6 @@ class SystemManagementTUI:
             if services_box_height-4+idx < services_box_height:
                 self.safe_addstr(services_box_height-4+idx, w//2+2, route[:w//2-6])
 
-        
         config_box_height = 9
         self.draw_box(services_box_height + 3, 1, config_box_height, w//2-1)
         self.safe_addstr(services_box_height + 3, 2, " Config Files ", curses.A_BOLD)
@@ -259,20 +259,20 @@ class SystemManagementTUI:
             self.options.append(option)
             self.safe_addstr(*option[:3])
 
-        
         self.draw_box(services_box_height + 3, w//2, config_box_height, w//2-1)
-        self.safe_addstr(services_box_height + 3, w//2+1, " Accounts ", curses.A_BOLD)
+        self.safe_addstr(services_box_height + 3, w//2+1, " Settings ", curses.A_BOLD)
         option = (services_box_height + 5, w//2+2, "[Change Password]", "change_password")
         self.options.append(option)
         self.safe_addstr(*option[:3])
+        option = (services_box_height + 6, w//2+2, "[Test Email]", "test_email")
+        self.options.append(option)
+        self.safe_addstr(*option[:3])
 
-        
         ports_box_height = 19
         ports_box_width = w//2 - 1
         self.draw_box(services_box_height + config_box_height + 3, 1, ports_box_height, ports_box_width)
         self.safe_addstr(services_box_height + config_box_height + 3, 2, " Ports and Interfaces in Use ", curses.A_BOLD)
 
-        
         self.safe_addstr(services_box_height + config_box_height + 5, 3, "Used ports:")
         ports_per_line = (ports_box_width - 6) // 6
         y = services_box_height + config_box_height + 6
@@ -285,7 +285,6 @@ class SystemManagementTUI:
                 self.safe_addstr(y - 1, ports_box_width - 15, "... more ports")
                 break
 
-        
         interfaces_y = min(y + 2, services_box_height + config_box_height + ports_box_height - 4)
         self.safe_addstr(interfaces_y, 3, "Used interfaces:")
         interfaces_str = ", ".join(self.used_interfaces)
@@ -294,7 +293,6 @@ class SystemManagementTUI:
             if interfaces_y + i + 1 < services_box_height + config_box_height + ports_box_height - 1:
                 self.safe_addstr(interfaces_y + i + 1, 3, line)
 
-        
         last_log_box_height = 19
         self.draw_box(services_box_height + config_box_height + 3, w//2, last_log_box_height, w//2-1)
         self.safe_addstr(services_box_height + config_box_height + 3, w//2+1, " Last Log Lines ", curses.A_BOLD)
@@ -316,7 +314,6 @@ class SystemManagementTUI:
                 for j, line in enumerate(wrapped_log[:1]):
                     self.safe_addstr(services_box_height + config_box_height + 6 + idx*2 + j, w//2+2, line)
 
-        
         self.safe_addstr(h-2, 1, '-' * (w-2))
         footer_text = "Tab/Arrows: Navigate | Enter: Select | Q: Quit | C: Console | R: Reboot | P: Poweroff"
         self.safe_addstr(h-1, 2, footer_text, curses.A_BOLD)
@@ -329,7 +326,6 @@ class SystemManagementTUI:
             y, x, text, _ = self.options[self.current_option]
             self.safe_addstr(y, x, text, curses.A_REVERSE)
         else:
-            
             self.current_option = 0
 
     def run(self):
@@ -340,7 +336,7 @@ class SystemManagementTUI:
             if not self.handle_key(key):
                 break
 
-            if time.time() - self.last_update >= 1:  
+            if time.time() - self.last_update >= 1:
                 self.update_service_statuses()
                 self.last_update = time.time()
 
@@ -359,7 +355,7 @@ class SystemManagementTUI:
             self.current_option = (self.current_option + 1) % len(self.options)
         elif key in [curses.KEY_UP, curses.KEY_LEFT]:
             self.current_option = (self.current_option - 1) % len(self.options)
-        elif key == 10:  
+        elif key == 10:
             self.execute_option()
         return True
 
@@ -378,6 +374,8 @@ class SystemManagementTUI:
             self.edit_config_file(["/etc/hnp/config", "/etc/rsyslog.d/10-vbr.conf", "/etc/hosts", "/etc/resolv.conf", "/etc/iproute2/rt_tables"][idx])
         elif action == "change_password":
             self.change_password()
+        elif action == "test_email":
+            self.test_email_configuration()
 
     def create_popup(self, message, height=7, width=60):
         h, w = self.stdscr.getmaxyx()
@@ -400,12 +398,157 @@ class SystemManagementTUI:
             popup.addstr(i+1, 2, line)
         popup.refresh()
 
+    def test_email_configuration(self):
+        popup = self.create_popup("Testing email configuration...", height=10, width=70)
+        logger.info("Starting email configuration test")
+        try:
+            logger.info("Reading email configuration from /etc/hnp/config")
+            config = configparser.ConfigParser()
+            config.read('/etc/hnp/config')
+            
+            if 'Email' not in config:
+                error_msg = "Email configuration section not found in /etc/hnp/config"
+                logger.error(error_msg)
+                logger.error("Available sections in config: " + ", ".join(config.sections()))
+                self.update_popup(popup, f"Error: {error_msg}\n\nPress any key to continue...")
+                popup.getch()
+                return
+
+            email_config = config['Email']
+            logger.info(f"Email Configuration Details:")
+            logger.info(f"- SMTP Server: {email_config.get('smtp_server', 'Not configured')}")
+            logger.info(f"- SMTP Port: {email_config.get('smtp_port', 'Not configured')}")
+            logger.info(f"- From Email: {email_config.get('from_email', 'Not configured')}")
+            logger.info(f"- To Email: {email_config.get('to_email', 'Not configured')}")
+            logger.info(f"- Enabled: {email_config.get('Enabled', 'No')}")
+            
+            if email_config.get('Enabled', 'No').lower() != 'yes':
+                error_msg = "Email is disabled in configuration"
+                logger.error(error_msg)
+                self.update_popup(popup, f"Error: {error_msg}. Please enable it first.\n\nPress any key to continue...")
+                popup.getch()
+                return
+
+            required_fields = ['smtp_server', 'smtp_port', 'smtp_username', 'smtp_password', 'from_email', 'to_email']
+            missing_fields = [field for field in required_fields if not email_config.get(field)]
+            
+            if missing_fields:
+                error_msg = "Missing required email configuration fields: " + ", ".join(missing_fields)
+                logger.error(error_msg)
+                self.update_popup(popup, f"Error: {error_msg}\n\nPress any key to continue...")
+                popup.getch()
+                return
+
+            logger.info("Preparing email message")
+            self.update_popup(popup, "Preparing test email...")
+            
+            msg = MIMEMultipart()
+            from_name = email_config.get('from_name', 'HNP System')
+            formatted_from = formataddr((from_name, email_config['from_email']))
+            msg['From'] = formatted_from
+            msg['To'] = email_config['to_email']
+            msg['Subject'] = f"Test Email from HNP System - {socket.gethostname()}"
+            
+            logger.info(f"Email headers prepared:")
+            logger.info(f"- From: {formatted_from}")
+            logger.info(f"- To: {email_config['to_email']}")
+            logger.info(f"- Subject: {msg['Subject']}")
+            
+            body = "This is a test email from your HNP (Honeypot) System.\n\n"
+            body += f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            body += f"Host: {socket.gethostname()}\n"
+            body += "\nIf you received this email, your email configuration is working correctly."
+            
+            msg.attach(MIMEText(body, 'plain'))
+
+            # Conexión SMTP
+            logger.info(f"Attempting to connect to SMTP server {email_config['smtp_server']}:{email_config['smtp_port']}")
+            self.update_popup(popup, "Connecting to SMTP server...")
+            try:
+                server = smtplib.SMTP(email_config['smtp_server'], int(email_config['smtp_port']))
+                logger.info("SMTP connection established")
+            except (smtplib.SMTPConnectError, ConnectionRefusedError) as e:
+                logger.error(f"Failed to connect to SMTP server: {str(e)}")
+                raise
+
+            # TLS
+            logger.info("Starting TLS connection")
+            self.update_popup(popup, "Establishing secure connection...")
+            try:
+                server.starttls()
+                logger.info("TLS connection established")
+            except Exception as e:
+                logger.error(f"Failed to start TLS: {str(e)}")
+                raise
+
+            # Login
+            logger.info(f"Attempting to login with username: {email_config['smtp_username']}")
+            self.update_popup(popup, "Authenticating...")
+            try:
+                server.login(email_config['smtp_username'], email_config['smtp_password'])
+                logger.info("SMTP authentication successful")
+            except smtplib.SMTPAuthenticationError as e:
+                logger.error(f"Authentication failed: {str(e)}")
+                raise
+            
+            # Envío
+            logger.info("Sending email message")
+            self.update_popup(popup, "Sending test email...")
+            try:
+                server.send_message(msg)
+                logger.info("Email sent successfully")
+            except Exception as e:
+                logger.error(f"Failed to send message: {str(e)}")
+                raise
+            finally:
+                logger.info("Closing SMTP connection")
+                server.quit()
+
+            success_msg = (
+                "Test email sent successfully!\n\n"
+                f"Recipient: {email_config['to_email']}\n\n"
+                "Please check your inbox.\n\n"
+                "Press any key to continue..."
+            )
+            self.update_popup(popup, success_msg)
+            popup.getch()
+
+        except Exception as e:
+            error_type = type(e).__name__
+            error_msg = str(e)
+            
+            logger.error(f"Email test failed with {error_type}: {error_msg}")
+            logger.error("Full error traceback:", exc_info=True)
+            
+            user_msg = "Failed to send test email:\n\n"
+            if isinstance(e, smtplib.SMTPAuthenticationError):
+                user_msg += "Authentication failed. Please check your username and password."
+            elif isinstance(e, (smtplib.SMTPConnectError, ConnectionRefusedError)):
+                user_msg += "Could not connect to SMTP server. Please check server address and port."
+            elif isinstance(e, smtplib.SMTPException):
+                user_msg += f"SMTP Error: {error_msg}"
+            else:
+                user_msg += f"Unexpected error: {error_msg}"
+            
+            user_msg += "\n\nPlease check your email configuration in /etc/hnp/config"
+            user_msg += "\nCheck /var/log/hnp/hnp_tui.log for detailed error information"
+            user_msg += "\n\nPress any key to continue..."
+            
+            logger.info("Email test completed with errors")
+            self.update_popup(popup, user_msg)
+            popup.getch()
+        else:
+            logger.info("Email test completed successfully")
+
+        self.stdscr.clear()
+        self.draw_menu()
+
     def manage_service(self, service, action):
         popup_msg = f"{action.capitalize()}ing {service}..."
         popup = self.create_popup(popup_msg)
         success = toggle_service(service, action)
         if success:
-            for i in range(20):  
+            for i in range(20):
                 new_status = get_service_status(service)
                 self.update_popup(popup, f"{service} status: {new_status}")
                 if (action == "start" and new_status == "Active") or \
@@ -418,8 +561,8 @@ class SystemManagementTUI:
             logger.error(f"Failed to {action} {service}")
             self.update_popup(popup, "Failed. Review Logs")
         time.sleep(2)
-        self.used_ports, self.used_interfaces = get_used_ports_and_interfaces()  
-        self.update_service_statuses()  
+        self.used_ports, self.used_interfaces = get_used_ports_and_interfaces()
+        self.update_service_statuses()
         self.stdscr.clear()
         self.draw_menu()
 
@@ -434,7 +577,7 @@ class SystemManagementTUI:
             logger.error(f"Failed to toggle boot status for {service}")
             self.update_popup(popup, "Failed. Review Logs")
         time.sleep(2)
-        self.update_service_statuses()  
+        self.update_service_statuses()
         self.stdscr.clear()
         self.draw_menu()
 
@@ -445,11 +588,11 @@ class SystemManagementTUI:
             password = ""
             while True:
                 ch = window.getch()
-                if ch == 10:  
+                if ch == 10:
                     break
-                elif ch == 27:  
+                elif ch == 27:
                     return None
-                elif ch == 127 or ch == 263:  
+                elif ch == 127 or ch == 263:
                     if password:
                         password = password[:-1]
                         window.addstr(3, 2, " " * (len(password) + 1))
@@ -489,10 +632,8 @@ class SystemManagementTUI:
         popup.addstr(1, 2, "Network Configuration", curses.A_BOLD)
         popup.refresh()
 
-        
         script_path = "/opt/NETW/network_config.py"
 
-        
         if not os.path.exists(script_path):
             popup.addstr(3, 2, f"Error: Script not found at {script_path}")
             popup.addstr(5, 2, "Press any key to continue...")
@@ -500,13 +641,11 @@ class SystemManagementTUI:
             popup.getch()
             return
 
-        
-        if os.environ.get('DISPLAY'):  
+        if os.environ.get('DISPLAY'):
             cmd = f"xterm -e 'python3 {script_path}; read -p \"Press Enter to close...\"'"
-        else:  
+        else:
             cmd = f"sudo python3 {script_path}; read -p 'Press Enter to close...'"
 
-        
         popup.addstr(3, 2, "Launching network configuration in a new terminal...")
         popup.addstr(5, 2, "Please switch to the new terminal to configure the network.")
         popup.addstr(7, 2, "This window will wait until the configuration is complete.")
@@ -514,15 +653,13 @@ class SystemManagementTUI:
         popup.refresh()
         popup.getch()
 
-        
-        curses.endwin()  
+        curses.endwin()
         os.system(cmd)
-        self.stdscr = curses.initscr()  
+        self.stdscr = curses.initscr()
         curses.noecho()
         curses.cbreak()
         self.stdscr.keypad(True)
 
-        
         popup.clear()
         popup.box()
         popup.addstr(1, 2, "Network Configuration", curses.A_BOLD)
@@ -554,7 +691,7 @@ class SystemManagementTUI:
         console_logger.addHandler(file_handler)
 
         history_file = '/tmp/hnptui_bash_history'
-        open(history_file, 'a').close()  
+        open(history_file, 'a').close()
 
         env = os.environ.copy()
         env['HISTFILE'] = history_file
