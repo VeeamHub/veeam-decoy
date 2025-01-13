@@ -16,7 +16,7 @@ And the following characteristics:
 - Terminal User Interface
 - Logs
 - Log Forwarding to SysLog Server
-- Email Notifications
+- Email Notifications / Test Config
 - Multiple Network Interface Configuration
 - List of Used Ports
 - Service Management
